@@ -2,16 +2,22 @@ from actions import Action
 
 
 class Brain:
-    def __init__(self, memory, lidar):
+    def __init__(self, memory, lidar, encoders):
         self.memory = memory
         self.lidar = lidar
+        self.encoders = encoders
 
-    def think(self, point_cloud, current_state, counter_max, obstacle_threshold, wall_follow_dist, alignment_threshold):
+    def think(self, current_state, counter_max, obstacle_threshold, wall_follow_dist, alignment_threshold):
         if self.memory.update_counter():
             return current_state
 
         self.memory.update_memory_count()
+        # --- See ---
+        self.memory.point_cloud = self.lidar.get_range_image()
+        self.memory.left_encoder_value = self.encoders.get_left_encoder_value()
+        self.memory.right_encoder_value = self.encoders.get_right_encoder_value()
 
+        # --- Deciding ---
         if self.memory.current_action == Action.ALIGNING_LEFT:
             self.memory.start_action(Action.TURN_90, counter_max / 2)
             return "left"
@@ -21,14 +27,14 @@ class Brain:
             return "right"
 
         if self.memory.current_action == Action.BACK_TO_INTERSECTION:
-            return self._handle_back_to_intersection(point_cloud, obstacle_threshold)
+            return self._handle_back_to_intersection(self.memory.point_cloud, obstacle_threshold)
 
         if self.memory.current_action == Action.TURN_90:
             self.memory.start_action(Action.NONE)
             return "forward"
 
-        if self.lidar.is_obstacle_near(point_cloud, self.lidar.L_FRONT, obstacle_threshold):
-            return self._handle_front_obstacle(point_cloud, counter_max, wall_follow_dist, alignment_threshold)
+        if self.lidar.is_obstacle_near(self.memory.point_cloud, self.lidar.L_FRONT, obstacle_threshold):
+            return self._handle_front_obstacle(self.memory.point_cloud, counter_max, wall_follow_dist, alignment_threshold)
 
         return "forward"
 

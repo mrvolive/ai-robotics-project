@@ -1,10 +1,11 @@
 """turtlebot_wall-following controller"""
 
-from controller import Robot
-from lidar import Lidar
-from motors import Motors
 from brain import Brain
+from controller import Robot
+from encoders import Encoders
+from lidar import Lidar
 from memory import Memory
+from motors import Motors
 
 
 class TurtlebotWallFollowing:
@@ -30,24 +31,28 @@ class TurtlebotWallFollowing:
         self.memory = Memory()
 
         self._init_devices()
-        self.brain = Brain(self.memory, self.lidar)
+        self.brain = Brain(self.memory, self.lidar, self.encoders)
 
     def _init_devices(self):
         """Initialize robot devices: Lidar and Motors."""
         self.lidar = Lidar(self.robot.getDevice("LDS-01"), self.timestep)
         self.motors = Motors(
             self.robot.getDevice("left wheel motor"),
-            self.robot.getDevice("right wheel motor")
+            self.robot.getDevice("right wheel motor"),
+        )
+        self.encoders = Encoders(
+            self.robot.getDevice("left wheel sensor"),
+            self.robot.getDevice("right wheel sensor"),
+            self.timestep
         )
 
-    def _update_state(self, point_cloud):
+    def _update_state(self):
         self.current_state = self.brain.think(
-            point_cloud,
             self.current_state,
             self.COUNTER_MAX,
             self.OBSTACLE_THRESHOLD,
             self.WALL_FOLLOW_DIST,
-            self.ALIGNMENT_THRESHOLD
+            self.ALIGNMENT_THRESHOLD,
         )
 
     def _get_target_velocities(self):
@@ -67,11 +72,8 @@ class TurtlebotWallFollowing:
     def run(self):
         """Main control loop."""
         while self.robot.step(self.timestep) != -1:
-            # --- See ---
-            point_cloud = self.lidar.get_range_image()
-
             # --- Think ---
-            self._update_state(point_cloud)
+            self._update_state()
             u_d, w_d = self._get_target_velocities()
 
             # --- Act ---

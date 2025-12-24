@@ -5,6 +5,9 @@ class Memory:
     def __init__(self):
         self.current_action = Action.NONE
         self.last_turn = ""
+        self.point_cloud = []
+        self.left_encoder_value = 0
+        self.right_encoder_value = 0
         self.counter = 0
         self.memory_count = 0
 

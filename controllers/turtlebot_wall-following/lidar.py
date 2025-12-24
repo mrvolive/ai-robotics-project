@@ -5,13 +5,13 @@ class Lidar:
     L_RIGHT = 270
     L_BACK = 0
 
-    def __init__(self, device, timestep):
-        self.device = device
-        self.device.enable(timestep)
-        self.device.enablePointCloud()
+    def __init__(self, lidar, timestep):
+        self.lidar = lidar
+        self.lidar.enable(timestep)
+        self.lidar.enablePointCloud()
 
     def get_range_image(self):
-        return self.device.getRangeImage()
+        return self.lidar.getRangeImage()
 
     def is_obstacle_near(self, point_cloud, angle: int, threshold: float) -> bool:
         values = []
