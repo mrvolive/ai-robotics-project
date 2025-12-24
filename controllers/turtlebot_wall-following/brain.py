@@ -1,3 +1,6 @@
+from actions import Action
+
+
 class Brain:
     def __init__(self, memory, lidar):
         self.memory = memory
@@ -9,19 +12,19 @@ class Brain:
 
         self.memory.update_memory_count()
 
-        if self.memory.current_action == 'aligning_left':
-            self.memory.start_action("90turn", counter_max / 2)
+        if self.memory.current_action == Action.ALIGNING_LEFT:
+            self.memory.start_action(Action.TURN_90, counter_max / 2)
             return "left"
 
-        if self.memory.current_action == 'aligning_right':
-            self.memory.start_action("90turn", counter_max / 2)
+        if self.memory.current_action == Action.ALIGNING_RIGHT:
+            self.memory.start_action(Action.TURN_90, counter_max / 2)
             return "right"
 
-        if self.memory.current_action == 'back_to_last_intersection':
+        if self.memory.current_action == Action.BACK_TO_INTERSECTION:
             return self._handle_back_to_intersection(point_cloud, obstacle_threshold)
 
-        if self.memory.current_action == "90turn":
-            self.memory.current_action = ""
+        if self.memory.current_action == Action.TURN_90:
+            self.memory.start_action(Action.NONE)
             return "forward"
 
         if self.lidar.is_obstacle_near(point_cloud, self.lidar.L_FRONT, obstacle_threshold):
@@ -32,12 +35,12 @@ class Brain:
     def _handle_back_to_intersection(self, point_cloud, obstacle_threshold):
         if self.lidar.is_gap(point_cloud, self.lidar.L_LEFT, obstacle_threshold):
             if self.memory.last_turn == "left":
-                self.memory.start_action("90turn", 180)
+                self.memory.start_action(Action.TURN_90, 180)
                 return "right"
-            self.memory.start_action("aligning_left", 27)
+            self.memory.start_action(Action.ALIGNING_LEFT, 27)
             return "left"
         elif self.lidar.is_gap(point_cloud, self.lidar.L_RIGHT, obstacle_threshold):
-            self.memory.start_action("aligning_right", 27)
+            self.memory.start_action(Action.ALIGNING_RIGHT, 27)
             return "right"
         return "backward"
 
@@ -55,13 +58,13 @@ class Brain:
             print('There is a wall on my left')
             if self.lidar.is_obstacle_near(point_cloud, self.lidar.L_RIGHT, wall_follow_dist):
                 print('There is a wall on my right')
-                self.memory.current_action = "back_to_last_intersection"
+                self.memory.current_action = Action.BACK_TO_INTERSECTION
                 return "backward"
             print('There is no wall on my right')
             self.memory.remember_turn("right")
-            self.memory.start_action("90turn", counter_max / 2)
+            self.memory.start_action(Action.TURN_90, counter_max / 2)
             return "right"
         print('There is no wall on my left')
         self.memory.remember_turn("left")
-        self.memory.start_action("90turn", counter_max / 2)
+        self.memory.start_action(Action.TURN_90, counter_max / 2)
         return "left"

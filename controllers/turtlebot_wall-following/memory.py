@@ -1,6 +1,9 @@
+from actions import Action
+
+
 class Memory:
     def __init__(self):
-        self.current_action = ""
+        self.current_action = Action.NONE
         self.last_turn = ""
         self.counter = 0
         self.memory_count = 0
