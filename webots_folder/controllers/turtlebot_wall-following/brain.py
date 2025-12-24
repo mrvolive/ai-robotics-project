@@ -52,14 +52,14 @@ class Brain:
         Returns:
             str: Next movement command ("forward", "left", "right", "backward")
         """
+        self.memory.left_encoder_value = self.encoders.get_left_encoder_value()
+        self.memory.right_encoder_value = self.encoders.get_right_encoder_value()
         if self.memory.update_counter():
             return current_state
 
         self.memory.update_memory_count()
         # --- See ---
         self.memory.point_cloud = self.lidar.get_range_image()
-        self.memory.left_encoder_value = self.encoders.get_left_encoder_value()
-        self.memory.right_encoder_value = self.encoders.get_right_encoder_value()
 
         # --- Decide ---
         if self.memory.current_action == Action.ALIGNING_LEFT:
