@@ -39,6 +39,8 @@ class Memory:
         self.right_encoder_value = 0
         self.counter = 0
         self.memory_count = 0
+        self.turn_start_left = 0.0
+        self.turn_start_right = 0.0
 
     def remember_turn(self, turn):
         """Remember the last turn direction for future decision making.

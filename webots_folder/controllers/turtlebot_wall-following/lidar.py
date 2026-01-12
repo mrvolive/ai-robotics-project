@@ -48,6 +48,22 @@ class Lidar:
         """
         return self.lidar.getRangeImage()
 
+    def get_max_range(self):
+        """Get the maximum range of the lidar.
+
+        Returns:
+            float: Maximum range in meters.
+        """
+        return self.lidar.getMaxRange()
+
+    def get_horizontal_resolution(self):
+        """Get the horizontal resolution of the lidar.
+
+        Returns:
+            int: Number of points in the horizontal field of view.
+        """
+        return self.lidar.getHorizontalResolution()
+
     def is_obstacle_near(self, angle: int, threshold: float) -> bool:
         """Check if there is an obstacle near the specified angle.
 

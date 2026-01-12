@@ -63,3 +63,13 @@ class Motors:
         
         self.left_motor.setVelocity(float(wl_d))
         self.right_motor.setVelocity(float(wr_d))
+
+    def set_wheel_velocities(self, left_velocity, right_velocity):
+        """Set individual wheel velocities directly.
+
+        Args:
+            left_velocity: Desired angular velocity for the left wheel (rad/s)
+            right_velocity: Desired angular velocity for the right wheel (rad/s)
+        """
+        self.left_motor.setVelocity(float(left_velocity))
+        self.right_motor.setVelocity(float(right_velocity))
