@@ -1,18 +1,44 @@
 \documentclass[a4paper,pdftex,12pt]{article}
-\usepackage[T1]{fontenc} % utf8 <- produce real utf8 characters
-\usepackage[utf8]{inputenc} % utf8 <- accept utf8 input characters
-%\usepackage[german]{babel}
+\usepackage[T1]{fontenc} 
+\usepackage[utf8]{inputenc} 
 
-\usepackage[hscale=0.75,vscale=0.75,vmarginratio={85:100},heightrounded]{geometry} % less margin at bottom
+\usepackage[hscale=0.75,vscale=0.75,vmarginratio={85:100},heightrounded]{geometry} 
 
 \usepackage{graphicx}
 \usepackage{latexsym}
 \usepackage{amsmath, amssymb}
-\usepackage{color, eurosym} % 6.9.07
+\usepackage{color, eurosym}
 \usepackage{float}
-%\usepackage{hyperref}
-\usepackage{xspace} % set a space if not fullstop / end of sentence
+\usepackage{xspace} 
 \usepackage{times}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Code listing style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
 
 \setlength{\textheight}{220mm}
 \setlength{\textwidth}{150mm}
@@ -26,8 +52,7 @@
 
 \sloppy
 
-
-% Makros
+% Macros
 \newcommand{\inv}[1]    {\frac{1}{#1}}
 \newcommand{\half}      {\frac{1}{2}}
 \newcommand{\R}{{\mathbb R}}
@@ -35,178 +60,75 @@
 \newcommand{\eqn}[2] {\begin{equation} \label{#1} #2 \end{equation}}
 \newcommand{\eqnn}[1] {\begin{equation*} #1 \end{equation*}}
 
-\title{% \vfill
-	%\vspace{-2.0cm}
-	Technical Report
-	Artificial Intelligence in Robotics}
+\title{Technical Report: AI in Robotics}
 \author{
-	Florian HEGELE (ULMP)
-	Olivier MARAVAL (ULMP)
-	Jonathan SILVA ()
+	Florian HEGELE (ULMP) \\
+	Olivier MARAVAL (ULMP) \\
+	Jonathan SILVA
 }
-\date{ \today}
+\date{\today}
 \parindent 0pt
 \parskip 1ex
 
-
 \begin{document}
-%\twocolumn
 
 \maketitle
+
 \begin{abstract}
-	We describe the guidelines for the technical documentation of the robot project in the Blended Intensive Programme (BIP) on AI in Robotics, conducted at the Hochschule Bremen, January 12-16, 2026. We outline the required structure of the technical report used as project documentation,
-	provide hints for writing, and define the assessment standards.
+This report documents the development and implementation of an autonomous navigation system using the WaveShare JetBot Professional. The project focuses on using various sensors for obstacle avoidance and line following behaviors. We describe the hardware setup, the software architecture, and the specific algorithms employed to process sensor data and control the robot.
 \end{abstract}
-%\vspace{-1.0 cm}
 
-%\parskip 1ex
+\section{Introduction}
+In this project, we explore autonomous navigation in a confined environment by leveraging sensor data for real-time decision making.
 
-%\newpage
+\section{Lidar Integration and Obstacle Avoidance}
+One of the core components of our system is the integration of a 2D Lidar sensor (RPLidar) to enable deterministic environmental perception. This section details the hardware integration, software interfacing, and the obstacle avoidance algorithm implemented.
 
+\subsection{Hardware and Software Interface}
+The project utilizes an RPLidar connected to the JetBot via the serial port \texttt{/dev/ttyACM1}. To interface with the hardware, we use the \texttt{rplidar} Python library. This library handles the low-level serial communication, allowing us to retrieve scan data efficiently.
 
+The connection is established as follows:
+\begin{lstlisting}[language=Python]
+from rplidar import RPLidar
+lidar = RPLidar('/dev/ttyACM1', timeout=3)
+lidar.start_motor()
+\end{lstlisting}
+We improved robustness by wrapping the connection logic in a try-except block to handle initialization failures or timeouts. A single retry would often be enough to start the Lidar.
 
-\section{Structural Requirements}
-The project may be processed in preferably international groups of 3-4 students, where all participants contribute to the result.
-The subject of the report is research, original development and analysis
-in the context of the conducted challenges. The exam performance
-consists of a presentation, a demonstration of the development, and the technical report described here.
-The implementation is, if not
-otherwise agreed, to be done in Python and optionally in C/C++ using the WaveShare JetBot Professional. Further
-tools, such as software libraries can be used, but must be declared in the report.
-It is also possible to include parts of the work and results from other sources,
-as long as foreign authorship and assistance is acknowledged, in detail.
+\subsection{Data Processing}
+The Lidar provides a continuous stream of measurements. We process these scans to extract relevant information for navigation. The raw data consists of tuples containing quality, angle, and distance (in millimeters).
 
-The presented results should be authentic and reproducible.
-The report should not contain any plagiarism, not even as modified text.
-The focus should be on the development of individual features, such as algorithms and hardware developments.
-Numerical examples should be self-generated and described in mathematical and algorithmic notation
-(equations, listings with comments). Code segments can be simplified to convey the most important
-parts. 
+We filter this data to focus on the area directly in front of the robot. We define a ``Front Sector'' covering angles from $330^{\circ}$ to $360^{\circ}$ (right-front) and $0^{\circ}$ to $30^{\circ}$ (left-front).
+For each scan, we identify the minimum distance to an obstacle within this sector:
 
+\begin{lstlisting}[language=Python]
+min_front_dist = float('inf')
+for (_, angle, dist_mm) in scan:
+    dist_m = dist_mm / 1000.0
+    if dist_m <= 0: continue # Filter invalid measurements
+    
+    # Check Front Sector (+/- 30 degrees)
+    if angle >= 330 or angle <= 30:
+        if dist_m < min_front_dist:
+            min_front_dist = dist_m
+\end{lstlisting}
 
-The technical report can be written using LaTeX (recommended). Its structure may contain the following items:
+\subsection{Control Logic}
+The obstacle avoidance logic should be used only as a last resort. We define a safety distance threshold (\texttt{SAFE\_DISTANCE}) of 0.3 meters.
+The control loop operates as follows:
 \begin{itemize}
-	\item Abstract: A brief summary of the contents in 2-3 sentences (should be the last part to be written).
-	This should not contain an introduction to the topic.
-	\item Motivation, introduction, scientific contribution, content: This can be the subject
-	of the first section. Here, a summary of 
-	the application scenario, the technical problems and an overview of the implemented system may be contained.
-	It may also be advisable to place a teaser figure right at the beginning of the paper,
-	so that the reader becomes familiar with the topic more quickly.
-	A compelling application scenario may be useful
-	to demonstrate the use of the developed system and to define requirements to be validated, later.
-	The remainder of section 1 summarizes the original technical contribution, followed by a very short overview replacing
-	a table of contents. 
-	\item Related Work / Basics: Here you may describe a few related works and tutorials that have been useful for conducting the project.
-	All literature used is referenced and listed at the end of the paper.
-	\item Concept / Algorithms / Implementation: This is the main part of the work, which contains the independent
-	conception and development. This part can consist of several sections.
-	Focus may be taken onto the most important individual developments.
-	\item Examples and Results: This section provides experimental data with a qualitative analysis, supported by
-	illustrations. Besides the implementation, this is the most important part of the paper, as it evaluates and proves the concept.
-	Test cases may be related to the application scenario, showing the benefits and also the limitations of te developed methods.
-	\item Conclusions and Future Work: Problems that could not be solved within the project
-	can be proposed here as future work. Also the embedding of the technology into larger application scenarios can be outlined.
-	\item Acknowledgments: help from other persons, like proofreading, and ideas or results adopted from other sources should be acknowledged.
-	\item Contributions: For each author, itemize the contributions to the project,
-	e.g. which sections have been written, which parts implemented, etc.
-	When the contributions are much different in quality and/or quantity, this can be considered in the grading.
-	\item Literature. LaTeX offers its own environment for this. As literature sources,
-	only peer-reviewed publications, books, and technical reports are appropriate. These are papers with
-	authors, title and publication date, for journals with volume/number, for conferences optionally with
-	conference date and location. You may also name the publisher and page numbers, optionally a URL.
-	Examples for proper references are \cite{Dyn87,Far02,Lev44,Mar63}.
+    \item If \texttt{min\_front\_dist} < 0.3m: The robot detects an imminent collision and executes a turn command (turning left) to avoid the obstacle.
+    \item If the path is clear: The robot goes back to his usual logic.
 \end{itemize}
 
-Web links, blogs, etc. do not count as literature, since the internet is subject to continuous change
-and its contents have not gone through a professional reviewing process.
-Online-sources can either be listed separately, or be added to the text as footnotes.
+This simple logic allows the JetBot to avoid obstacles without complex path planning, suitable when the ai model fails to prevent a collision.
 
-The style of writing for scientific papers is focused and factual, without
-digress (no "marketing", no jokes, no "sloppy" language).
-The "I" form (and also the imperative, except for exercises) should be avoided.
-You can use the "we" form if you are writing in a way that includes the reader
-(also when you are the sole author, e.g. when writing a thesis).
-As a rule, almost everything is written in present tense. If at all, the future tense is used in the last section.
-The past tense can be used when dating related work.
+\section{Conclusion}
+Coming soon...
 
-Further, it is important that figures and tables (flow objects created by LaTeX
-placed at the top of the page) are provided with numbers and captions containing a meaningful description.
-Each of these objects should be referenced (at least once) within the text where it is relevant.
-The same applies to literature: every reference should appear at least once, including
-one or two sentences dedicated to it. When working with BibTeX, only
-those references that are used appear, at all. This way one can re-use the same literature base for multiple papers.
-
-Equations are automatically numbered in round brackets by LaTeX. One can 
-refer to these numbers elsewhere in the text, on demand.
-The numbering of equations is very helpful for sharing when writing between multiple authors and reviewers.
-
-Acknowledgments: Those whom advice has been taken from (other than the authors) and in case results are shared with other
-developers, these people should also be named and their contributions should be
-acknowledged.
-Acknowledgments do not diminish the value of your own work. On the contrary: They show that you have also exchanged ideas with other experts about the solution approaches and the technologies used.
-Also, the use of tools, code from other sources, and AI-tools needs to be acknowledged in detail. 
-
-AI tools:
-You are permitted to use AI tools to assist in the preparation of your BIP project report, but their use is strictly limited to reformatting and rephrasing text. These tools should not be employed for generating content or ideas, as the report must reflect your original work and understanding. If you choose to use an AI tool, you are required to declare which model was used and explicitly specify the sections where it was applied. This ensures transparency and adherence to academic integrity. Failure to disclose the use of AI tools may result in penalties, so be diligent and honest in documenting their use.
-
-Further, the technical report should be concise and focused,
-but contain all the details necessary to reproduce the results.
-Own results and a qualitative analysis with assessment in terms of applicability
-should not be missing. The report should not be longer than 12 pages in total.
-
-\section{Assessment Standards}
-
-The most important assessment criteria are:
-\begin{itemize}
-	\item Complexity and authenticity of the project
-	\item Quality of elaboration. This includes research, focused presentation in scientific
-	notation, technical correctness, selection of examples, their evaluation and reproducibility, as well as authenticity.
-	\item Compliance with formal criteria (language, references to figures and literature,
-	structure, completeness, etc.) and readability.
-\end{itemize}
-
-After submission, each project will be assigned a detailed review, based on the following questions:
-\begin{itemize}
-	\item Are title and abstract appropriate and do they motivate to read the paper?
-	\item Research: Are proper references to related work contained?
-	\item Technical correctness: Are the descriptions complete and free of errors? 
-	\item Reproducibility: Is it possible to reproduce the results from the information given?
-	\item Contribution: Does the paper contain authentic examples and evaluations?
-	\item Readability: Is the paper well written and easy to understand?
-	\item Length: Is the length justified by the technical contribution?
-	\item Overall Impression
-	\item Typos and Further Issues.
-\end{itemize}
-
-The above list of questions can also be used for self-assessment before submission.
-Please, turn in your report and your source code well before the deadline (January 31st, if not agreed otherwise) within the Exercise "Digital Submission" in AULIS.
-
-Further hints for scientific writing are contained in the file {\bf ScientificWritingMHB.pdf} within the AULIS Group
-and in the book "Writing for Computer Science" by Justin Zobel \cite{Zob14}.
-
-\section*{Acknowledgements}
-This document has been improved by many people, including José Lima (IPB), and Felipe Martins (Hanze Groningen).
-
-\begin{thebibliography}{20} % Breite für die Nummern
-	\bibitem{Dyn87}
-	Nira Dyn, David Levin and John A. Gregory, 
-	{\it A 4-point interpolatory subdivision scheme for curve design}, 
-	Computer Aided Geometric Design, vol. 4, no. 4, Elsevier, 1987, pp. 257-268.
-	\bibitem{Far02} 
-	Gerald Farin, {\it Curves and Surfaces for CAGD. A practical guide.}
-	5. Auflage, Academic Press, San Diego 2002, ISBN 1-55860-737-4
-	\bibitem{Lev44}
-	Kenneth Levenberg {\it A Method for the Solution of Certain Problems in Least Squares},
-	Quarterly of Applied Mathematics, vol. 2, no. 2, American Mathematical Society (AMS), 1944, pp. 164-168.
-	{\tt https://www.ams.org/journals/qam/1944-02-02/home.html}
-	\bibitem{Mar63}
-	Donald W. Marquardt, {\it An Algorithm for Least-Squares Estimation of Nonlinear Parameters},
-	SIAM Journal on Applied Mathematics, vol. 11, no. 2, Society for Industrial and Applied Mathematics
-	(SIAM), 1963, pp. 431-441.
-	{\tt https://epubs.siam.org/doi/abs/10.1137/0111030}
-	\bibitem{Zob14} Justin Zobel, Writing for Computer Science, 3rd edition,
-	Springer, 2014.
-	
+\begin{thebibliography}{9}
+\bibitem{rplidar}
+RPLidar Python Library, \texttt{https://github.com/SkoltechRobotics/rplidar}
 \end{thebibliography}
+
 \end{document}
