@@ -44,7 +44,7 @@ Floor {
 TurtleBot3Burger {
   translation -1.4 0.3 0.0001
   rotation 0.0011583240812333623 -0.0011066833463491816 0.9999987167678235 -1.58
-  controller "turtlebot_wall-following"
+  controller "bind-box-avoidance"
   extensionSlot [
     RobotisLds01 {
       rotation 0 0 1 3.141592653589793
