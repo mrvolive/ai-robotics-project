@@ -43,12 +43,12 @@ class Brain:
             return 0.0, 0.0
 
         # Define a front sector to check for obstacles
-        # Front is 180. We check +/- 30 degrees (150 to 210)
-        # Based on L_LEFT=90, L_FRONT=180, L_RIGHT=270
-        sector_start = 150
-        sector_end = 210
-        
-        sector_values = ranges[sector_start:sector_end]
+        # We check +/- 30 degrees around the front angle
+        front_angle = self.lidar.L_FRONT
+        sector_values = []
+        for i in range(-30, 31):
+            idx = (front_angle + i) % 360
+            sector_values.append(ranges[idx])
         
         # Filter out invalid values (NaN)
         valid_distances = [x for x in sector_values if not math.isnan(x)]

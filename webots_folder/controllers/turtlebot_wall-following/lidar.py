@@ -22,10 +22,10 @@ class Lidar:
     """
 
     # Lidar Angles (Indices for the point cloud array)
-    L_LEFT = 90
-    L_FRONT = 180
-    L_RIGHT = 270
-    L_BACK = 0
+    L_LEFT = 270
+    L_FRONT = 0
+    L_RIGHT = 90
+    L_BACK = 180
 
     def __init__(self, lidar, timestep):
         """Initialize the lidar sensor with the given device and timestep.
