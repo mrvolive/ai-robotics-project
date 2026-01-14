@@ -362,8 +362,4 @@ class RobotController:
         except KeyboardInterrupt:
             self.robot.stop()
             self.camera_link.unlink()
-
-if __name__ == "__main__":
-    controller = RobotController()
-    controller.start()
-
+            self.camera.stop()
