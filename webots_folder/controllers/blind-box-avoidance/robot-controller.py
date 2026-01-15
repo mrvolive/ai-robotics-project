@@ -6,6 +6,10 @@ import numpy as np
 import traitlets
 import ipywidgets.widgets as widgets
 import time
+import sys
+import select
+import tty
+import termios
 import cv2
 from enum import Enum, auto
 
@@ -96,6 +100,7 @@ class RobotController:
         self.heartbeat.observe(self.handle_heartbeat_status, names='status')
         
         print("RobotController initialized. Starting in FOLLOWING_LINE state.")
+        self.old_settings = termios.tcgetattr(sys.stdin)
 
     def handle_heartbeat_status(self, change):
         if change['new'] == Heartbeat.Status.dead:
@@ -354,12 +359,48 @@ class RobotController:
         elif self.current_state == State.SHARP_TURN_RIGHT:
             self.run_sharp_turn(direction='right')
 
+    def handle_keys(self):
+        if self.camera.value is None:
+            return
+
+        if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+            key = sys.stdin.read(1)
+            
+            if key == 'q':
+                raise KeyboardInterrupt
+            elif key == '1':
+                self.transition_to(State.FOLLOWING_LINE)
+            elif key == '2':
+                self.transition_to(State.RIGHT_DODGE)
+            elif key == '3':
+                self.transition_to(State.LEFT_DODGE)
+            elif key == '4':
+                self.transition_to(State.STOP_SIGN)
+            elif key == '5':
+                self.transition_to(State.TURN_RIGHT_SIGN)
+            elif key == '6':
+                self.transition_to(State.TURN_LEFT_SIGN)
+            elif key == '7':
+                self.transition_to(State.SHARP_TURN_LEFT)
+            elif key == '8':
+                self.transition_to(State.SHARP_TURN_RIGHT)
+
     def start(self):
+        print("Starting Control Loop.")
+        print("Debug Keys: 1:Line, 2:R-Dodge, 3:L-Dodge, 4:Stop, 5:R-Turn, 6:L-Turn, 7:Sharp-L, 8:Sharp-R, q:Quit")
+        tty.setraw(sys.stdin.fileno())
         try:
             while True:
+                self.handle_keys()
                 self.update()
                 # time.sleep(0.01) # Small sleep to prevent 100% CPU usage if needed
         except KeyboardInterrupt:
             self.robot.stop()
             self.camera_link.unlink()
             self.camera.stop()
+        finally:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_settings)
+            
+controller = RobotController()         
+controller.start()
+
