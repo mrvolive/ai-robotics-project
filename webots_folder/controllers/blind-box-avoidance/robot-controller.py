@@ -442,28 +442,28 @@ class RobotController:
         if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
             key = sys.stdin.read(1)
             
-            if key == 'q':
+            if key == 'x':
                 raise KeyboardInterrupt
-            elif key == '1':
+            elif key == 'f':
                 self.transition_to(State.FOLLOWING_LINE)
-            elif key == '2':
+            elif key == 'r':
                 self.transition_to(State.RIGHT_DODGE)
-            elif key == '3':
+            elif key == 'l':
                 self.transition_to(State.LEFT_DODGE)
-            elif key == '4':
+            elif key == 's':
                 self.transition_to(State.STOP_SIGN)
-            elif key == '5':
+            elif key == 'e':
                 self.transition_to(State.TURN_RIGHT_SIGN)
-            elif key == '6':
+            elif key == 'q':
                 self.transition_to(State.TURN_LEFT_SIGN)
-            elif key == '7':
+            elif key == 'a':
                 self.transition_to(State.SHARP_TURN_LEFT)
-            elif key == '8':
+            elif key == 'd':
                 self.transition_to(State.SHARP_TURN_RIGHT)
 
     def start(self):
         print("Starting Control Loop.")
-        print("Debug Keys: 1:Line, 2:R-Dodge, 3:L-Dodge, 4:Stop, 5:R-Turn, 6:L-Turn, 7:Sharp-L, 8:Sharp-R, q:Quit")
+        print("Debug Keys: f:Line, r:R-Dodge, l:L-Dodge, s:Stop, e:R-Turn, q:L-Turn, a:Sharp-L, d:Sharp-R, x:Quit")
         tty.setraw(sys.stdin.fileno())
         try:
             while True:
