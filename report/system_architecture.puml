@@ -1,0 +1,91 @@
+@startuml System Architecture
+
+!define RECTANGLE class
+
+' Define the components with distinct colors
+skinparam componentStyle rectangle
+
+package "JetBot Robot" #E8F4F8 {
+    component "Camera" as Camera #FFE5B4
+    component "Vision Processing\nModule" as Vision #B8D4E8
+    component "Lane Following\nModule" as Lane #B8D4E8
+    component "Control Module\n(State Machine)" as Control #B8D4E8
+    component "Kinematics\nModule" as Kinematics #B8D4E8
+    component "Motors" as Motors #FFE5B4
+}
+
+package "Remote Processing Unit" #E8F8E8 {
+    component "Sign Recognition\nSystem" as SignRecognition #B8E8B8
+    component "Video Display" as Display #B8E8B8
+}
+
+package "Communication Layer" #F8E8E8 {
+    database "ZeroMQ\nTCP/IP" as ZMQ #FFD4D4
+}
+
+' Data flow relationships
+Camera --> Vision : Raw Frames
+Vision --> Lane : Preprocessed\nImage
+Lane --> Vision : Steering\nCalculation
+Vision --> ZMQ : Video Stream\n(JPEG, Port 5555)
+
+ZMQ --> Display : Video Data
+
+SignRecognition --> ZMQ : Sign Commands\n(JSON, Port 5556)
+ZMQ --> Control : Sign Recognition\nResults
+
+Control --> Lane : Steering\nCommand
+Control --> Kinematics : Velocity\nCommands
+Kinematics --> Motors : Wheel Speed\nCommands
+
+' Feedback and status
+Motors --> Control : Odometry\nFeedback
+Vision --> Control : Lane Detection\nStatus
+
+' Safety mechanisms
+rectangle "Safety Mechanisms" as Safety #FFF4E8 {
+    component "Heartbeat\nMonitor" as Heartbeat
+    component "Command\nTimeout" as Timeout
+    component "Speed\nLimiting" as SpeedLimit
+}
+
+Control --> Heartbeat : Status
+Control --> Timeout : Command\nTimestamp
+Control --> SpeedLimit : Steering\nValue
+
+Heartbeat --> Motors : Stop on\nConnection Lost
+Timeout --> Motors : Stop on\nTimeout
+SpeedLimit --> Motors : Clamp\nSteering
+
+note right of Vision
+  - Median Blur
+  - Brightness Adjustment
+  - Grayscale Conversion
+  - Canny Edge Detection
+end note
+
+note left of Lane
+  - Hough Transform
+  - Line Clustering
+  - Center Calculation
+  - Steering Computation
+end note
+
+note bottom of Control
+  States:
+  - FOLLOWING_LINE
+  - STOP_SIGN
+  - TURN_LEFT_SIGN
+  - TURN_RIGHT_SIGN
+  - FORB_AHEAD
+  - DODGE states
+end note
+
+note right of ZMQ
+  Video Port: 5555
+  Control Port: 5556
+  CONFLATE Mode
+  Latency: ~50-100ms
+end note
+
+@enduml

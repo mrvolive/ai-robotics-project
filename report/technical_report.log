@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2026/dev/Arch Linux) (preloaded format=pdflatex 2026.1.5)  21 JAN 2026 16:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2026/dev/Arch Linux) (preloaded format=pdflatex 2026.1.5)  21 JAN 2026 17:21
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -346,41 +346,108 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf-dist/fonts
 /enc/dvips/base/8r.enc}]
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 11
-6.
+
+[2]
+
+[3]
+LaTeX Font Info:    Trying to load font information for T1+pcr on input line 14
+1.
  (/usr/share/texmf-dist/tex/latex/psnfss/t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 )
-Overfull \hbox (22.54265pt too wide) in paragraph at lines 116--117
-[]\T1/ptm/m/n/12 RPLidar Python Li-brary, \T1/pcr/m/n/12 https://github.com/Sko
-ltechRobotics/rplidar 
+(/usr/share/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2024/09/23 1.10c listings language file
+)
+
+[4]
+
+[5]
+Underfull \hbox (badness 3965) in paragraph at lines 224--225
+\T1/ptm/m/n/12 Lane bound-aries are de-tected us-ing a bottom-up re-gion of in-
+ter-est ap-proach.
+ []
+
+
+Underfull \hbox (badness 2326) in paragraph at lines 224--225
+\T1/ptm/m/n/12 This pro-cess be-gins by slic-ing the lower half of the im-age (
+\T1/pcr/m/n/12 sliced_image
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 224--225
+\T1/pcr/m/n/12 = camera.value[int(h*0.5):h, :, :]\T1/ptm/m/n/12 ), fol-lowed by
+ the ap-pli-ca-tion
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 224--225
+\T1/ptm/m/n/12 of Canny edge de-tec-tion (\T1/pcr/m/n/12 cv2.Canny(image_aux, C
+ANNY_THRESHOLD,
+ []
+
+
+Underfull \hbox (badness 1584) in paragraph at lines 224--225
+\T1/pcr/m/n/12 CANNY_THRESHOLD * 1.1)\T1/ptm/m/n/12 ). Fi-nally, line seg-ments
+ are ex-tracted us-ing the
  []
 
 
 
-[2]
+[6]
 
-[3] (./technical_report.aux)
+[7]
+
+[8]
+
+[9]
+
+[10]
+
+[11]
+
+[12]
+
+[13]
+
+[14]
+Underfull \hbox (badness 10000) in paragraph at lines 564--565
+[]\T1/ptm/m/n/12 OpenCV Doc-u-men-ta-tion, ``Canny Edge De-tec-tion,'' [On-line
+]. Avail-able:
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 567--568
+[]\T1/ptm/m/n/12 OpenCV Doc-u-men-ta-tion, ``Hough Line Trans-form,'' [On-line]
+. Avail-able:
+ []
+
+
+
+[15] (./technical_report.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 5555 strings out of 475101
- 79645 string characters out of 5764996
- 476539 words of memory out of 5000000
- 28493 multiletter control sequences out of 15000+600000
- 584378 words of font info for 69 fonts, out of 8000000 for 9000
+ 6165 strings out of 475101
+ 85968 string characters out of 5764996
+ 887389 words of memory out of 5000000
+ 29086 multiletter control sequences out of 15000+600000
+ 599681 words of font info for 98 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 57i,6n,65p,366b,266s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/share/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texmf-d
-ist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texmf-dist/fonts/type1/urw/tim
-es/utmr8a.pfb>
-Output written on technical_report.pdf (3 pages, 47021 bytes).
+ 57i,8n,65p,772b,1667s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texmf-dist/font
+s/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-dist/fonts/type1/public/
+amsfonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/urw/courier/ucrr8a.pf
+b></usr/share/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texmf-dis
+t/fonts/type1/urw/times/utmr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times
+/utmri8a.pfb>
+Output written on technical_report.pdf (15 pages, 130000 bytes).
 PDF statistics:
- 30 PDF objects out of 1000 (max. 8388607)
- 18 compressed objects within 1 object stream
+ 94 PDF objects out of 1000 (max. 8388607)
+ 60 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
