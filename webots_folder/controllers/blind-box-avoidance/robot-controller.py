@@ -12,23 +12,7 @@ import tty
 import termios
 import cv2
 from enum import Enum, auto
-try:
-    from rplidar import RPLidar, RPLidarException
-    HAS_LIDAR = True
-    print("RPLidar library found.")
-except ImportError:
-    try:
-        from rplidar import RPLidar
-        RPLidarException = Exception
-        HAS_LIDAR = True
-        print("RPLidar library found (generic exception).")
-    except ImportError:
-        HAS_LIDAR = False
-        print("Warning: 'rplidar' library not found. Lidar avoidance disabled.")
 
-# --- Lidar Configuration ---
-LIDAR_PORT = '/dev/ttyACM1'
-SAFE_DISTANCE = 0.25
 
 class Kinematics:
     """Handle robot kinematics calculations"""
@@ -96,11 +80,6 @@ class RobotController:
         self.image_widget = widgets.Image(format='jpeg', width=300, height=300)
         self.camera_link = traitlets.dlink((self.camera, 'value'), (self.image_widget, 'value'), transform=bgr8_to_jpeg)
         
-        # Lidar Setup
-        self.lidar = None
-        if HAS_LIDAR:
-            self.lidar = self.connect_lidar()
-        
         # Kinematics Setup
         self.WHEEL_RADIUS = 0.325
         self.WHEEL_DISTANCE = 0.15
@@ -128,47 +107,6 @@ class RobotController:
         if change['new'] == Heartbeat.Status.dead:
             self.camera_link.unlink()
             self.robot.stop()
-
-    def connect_lidar(self):
-        """Connects to the RPLidar and returns the object."""
-        try:
-            new_lidar = RPLidar(LIDAR_PORT, timeout=3)
-            new_lidar.start_motor()
-            time.sleep(1)
-            print(f"Lidar connected on {LIDAR_PORT}")
-            return new_lidar
-        except Exception as e:
-            print(f"Failed to connect to Lidar: {e}")
-            return None
-
-    def get_lidar_metrics(self, scan):
-        """
-        Process raw scan data to extract sectors.
-        RPLidar Scan: [(quality, angle, dist_mm), ...]
-        Angle 0 is usually front.
-        Returns: (dist_front, min_left, min_right)
-        """
-        dist_front = float('inf')
-        min_left = float('inf')
-        min_right = float('inf')
-
-        for (_, angle, dist_mm) in scan:
-            dist_m = dist_mm / 1000.0
-            if dist_m <= 0: continue
-
-            if angle > 340 or angle < 20:
-                if dist_m < dist_front:
-                    dist_front = dist_m
-            
-            if 20 < angle < 90:
-                if dist_m < min_left:
-                    min_left = dist_m
-            
-            if 270 < angle < 340:
-                if dist_m < min_right:
-                    min_right = dist_m
-                
-        return dist_front, min_left, min_right
 
     def preprocess(self, frame):
         frame = cv2.medianBlur(frame, 3)
@@ -241,25 +179,8 @@ class RobotController:
             self.dodge_phase = 0 # Reset dodge phase on transition
 
     def check_triggers(self):
-        """
-        Check for conditions to switch states.
-        Checks lidar for obstacles and triggers dodge maneuver if needed.
-        """
-        if HAS_LIDAR and self.lidar is not None and self.current_state == State.FOLLOWING_LINE:
-            try:
-                scan = next(self.lidar.iter_scans(max_buf_meas=500, min_len=1))
-                dist_front, min_left, min_right = self.get_lidar_metrics(scan)
-                
-                if dist_front < SAFE_DISTANCE:
-                    print(f"Obstacle detected at {dist_front:.2f}m. Initiating dodge.")
-                    if min_right < min_left:
-                        print(f"Right ({min_right:.2f}) < Left ({min_left:.2f}) -> RIGHT_DODGE")
-                        self.transition_to(State.RIGHT_DODGE)
-                    else:
-                        print(f"Left ({min_left:.2f}) <= Right ({min_right:.2f}) -> LEFT_DODGE")
-                        self.transition_to(State.LEFT_DODGE)
-            except (RPLidarException, StopIteration, Exception) as e:
-                pass
+        """Check for conditions to switch states."""
+        pass
 
     def run_following_line(self):
         # 1. Get Image
@@ -476,13 +397,6 @@ class RobotController:
             self.camera.stop()
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_settings)
-            if self.lidar is not None:
-                try:
-                    self.lidar.stop()
-                    self.lidar.stop_motor()
-                    self.lidar.disconnect()
-                except:
-                    pass
             
 controller = RobotController()         
 controller.start()
